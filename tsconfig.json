@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    // Environment setup & latest features
+    "lib": ["ES5", "ES2015.Collection", "ES2015.Core"],
+    "target": "es5",
+    "module": "es2015",
+    // "allowJs": true,
+    "baseUrl": "./src",
+
+    // Bundler mode
+    "moduleResolution": "bundler",
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "outDir": "./dist",
+
+    // Best practices
+    "strict": true,
+    "skipLibCheck": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+
+    // Some stricter flags (disabled by default)
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noPropertyAccessFromIndexSignature": false
+  },
+  "include": ["**/*.ts", "**/*.js", "**/*.js.aes"],
+  "exclude": ["eslint.config.ts"]
+}

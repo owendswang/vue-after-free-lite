@@ -1,0 +1,237 @@
+// Remote loader - downloads and evals inject.js from WebSocketServer
+
+var WS_PORT = 40404;
+
+try {
+    //allow remoteplay
+    jsmaf.remotePlay = true;
+
+    // start WebSocket server listening to PS4_IP:WS_PORT 
+    ws = new jsmaf.WebSocketServer();
+    ws.port = WS_PORT;
+
+    var maxLines = 37;
+    var logBuffer = [];
+    var lineHeight = 28;
+    var padding = 20;
+
+    var bg = new Image({
+        url: 'file:///../download0/img/1PixelGrey.png',
+        x: 0,
+        y: 0,
+        width: 1920,
+        height: 1080
+    });
+
+    var logTextLines = [];
+
+    var ICON_SIZE = 24;
+    var ICON_GAP = 10;
+
+    var ICON_EMPTY = 'file:///../download0/1PixelTransparent.png';
+
+    var ICON_MAP = {
+        'X': 'file:///../download0/img/ds4_cross_24.png',
+        'O': 'file:///../download0/img/ds4_circle_24.png',
+        'Square': 'file:///../download0/img/ds4_square_24.png',
+        'Triangle': 'file:///../download0/img/ds4_triangle_24.png',
+        'R1': 'file:///../download0/img/ds4_R1_24.png'
+    };
+
+    var iconLines = [];
+
+    jsmaf.root.children.length = 0;
+    jsmaf.root.children.push(bg);
+
+    for (var i = 0; i < maxLines; i++) {
+        var iy = padding + i * lineHeight;
+
+        var ic = new Image({
+            url: ICON_EMPTY,
+            x: padding,
+            y: iy,
+            width: 0,
+            height: 0
+        });
+        iconLines.push(ic);
+        jsmaf.root.children.push(ic);
+
+        var t = new jsmaf.Text();
+        t.text = '';
+        t.x = padding;
+        t.y = padding + i * lineHeight;
+        logTextLines.push(t);
+        jsmaf.root.children.push(t);
+    }
+
+    function yieldUI(cb) {
+        jsmaf.setTimeout(cb, 16)
+    }
+
+    function waitUntil(test, intervalMs, timeoutMs, done) {
+        var start = Date.now()
+
+        function tick() {
+            var ok = false
+            try {
+                ok = !!test()
+            } catch (e) {
+                ok = false
+            }
+
+            if (ok) {
+                done(null, Date.now() - start)
+                return
+            }
+
+            if (Date.now() - start >= timeoutMs) {
+                done(new Error('timeout'), Date.now() - start)
+                return
+            }
+
+            jsmaf.setTimeout(tick, intervalMs)
+        }
+
+        tick()
+    }
+
+    var scrollOffset = 0;
+    function clampScroll() {
+        var maxScroll = logBuffer.length - maxLines;
+        if (maxScroll < 0) maxScroll = 0;
+        if (scrollOffset < 0) scrollOffset = 0;
+        if (scrollOffset > maxScroll) scrollOffset = maxScroll;
+    }
+
+    function refreshTextLines() {
+        clampScroll();
+
+        var startLine = 0;
+        if (logBuffer.length > maxLines) startLine = logBuffer.length - maxLines;
+        startLine = startLine - scrollOffset;
+        if (startLine < 0) startLine = 0;
+
+        for (var i = 0; i < maxLines; i++) {
+            var idx = startLine + i;
+
+            if (idx < logBuffer.length) {
+                var raw = logBuffer[idx].replace(/^\[[+\-\*]\] /, '');
+
+                var m = raw.match(/^\[([^\]]+)\]\s*/);
+                var key = m ? m[1] : '';
+                var iconUrl = key && ICON_MAP[key] ? ICON_MAP[key] : null;
+
+                if (iconUrl) {
+                    iconLines[i].url = iconUrl;
+                    iconLines[i].width = ICON_SIZE;
+                    iconLines[i].height = ICON_SIZE;
+
+                    logTextLines[i].x = padding + ICON_SIZE + ICON_GAP;
+                    logTextLines[i].text = raw.replace(/^\[[^\]]+\]\s*/, '');
+                } else {
+                    iconLines[i].url = ICON_EMPTY;
+                    iconLines[i].width = 0;
+                    iconLines[i].height = 0;
+
+                    logTextLines[i].x = padding;
+                    logTextLines[i].text = raw;
+                }
+            } else {
+                iconLines[i].url = ICON_EMPTY;
+                iconLines[i].width = 0;
+                iconLines[i].height = 0;
+
+                logTextLines[i].x = padding;
+                logTextLines[i].text = '';
+            }
+        }
+    }
+
+    var dirty = false;
+    function scheduleRefresh() {
+        if (dirty) return;
+        dirty = true;
+        jsmaf.setTimeout(function () {
+            dirty = false;
+            refreshTextLines();
+        }, 16);
+    }
+
+    // Replace global log() to show on screen
+    _log = function(msg, screen) {
+        if (screen) {
+            logBuffer.push(msg);
+            scheduleRefresh();
+        }
+        ws.broadcast(msg); // Still send to websocket too
+    }
+    log = function(msg) {
+        _log(`[+] ${msg}`, true);
+    }
+    debug = function(msg) {
+        _log(`[*] ${msg}`, false);
+    }
+    error = function(msg) {
+        _log(`[-] ${msg}`, true);
+    }
+
+    // handle WebSocket received messages
+    ws.onmessage = function(c, e) {
+        if (e.data.length === 1 && e.data[0].constructor.name === 'String') {
+            try {
+                jsmaf.eval(e.data[0]);
+            } catch(err) {
+                error(err.message);
+                for (var i of err.stack.split('\n')) {
+                    error(i);
+                }
+            }
+        } else {
+            error('Failed to receive valid message !!');
+        }
+    }
+/*
+    log(String(jsmaf.version)); // 2.13.2
+    log(String(jsmaf.fwDebugString)); // release/2.13-e98b7be
+    log(String(jsmaf.platform)); // ps4
+    log(String(jsmaf.hardwareId)); // e4fd4044491bee4acccbc397520fc13c
+    log(String(jsmaf.locale)); // zh
+    log(String(jsmaf.remotePlay)); // true
+*/
+    // Credits
+    log('Vue After Free  v1.4 - Lite');
+    log('Credits:');
+    log('ufm42, c0w-ar, earthonion, HelloYunho, Gezine, D-Link Turtle, Dr.Yenyen, Thefl0w, abc, AI-Azif, owendswang');
+    // log('ps4-hen - AI-Azif, illusion0001, EchoStretch')
+    log('GoldHEN v2.4b18.9 - SISTro, ctn, Kameleon')
+    log('elfldr v0.4 - john-tornblom, AI-Azif')
+    log('NP Fake Signin v1.1 - earthonion')
+    log('');
+    
+    jsmaf._onKeyUp = null
+    jsmaf.onKeyUp = function (keyCode) {
+        var fn = jsmaf._onKeyUp
+        if (typeof fn === 'function') fn(keyCode)
+
+        var STEP = 6
+
+        if ((keyCode === 6) || (keyCode === 57) || (keyCode === 61)) {
+            scrollOffset = scrollOffset + STEP
+            scheduleRefresh()
+        }
+
+        if ((keyCode === 4) || (keyCode === 55) || (keyCode === 59)) {
+            scrollOffset = scrollOffset - STEP
+            scheduleRefresh()
+        }
+    }
+    try {
+        yieldUI(function () {
+            include('loader.js');
+        });
+    } catch(e) {
+        error(e.message);
+    }
+} catch(e) {
+    alert(`${e.message}\n${e.stack}`);
+}

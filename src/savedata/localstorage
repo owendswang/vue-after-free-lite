@@ -1,0 +1,3 @@
+appConfig={"forceCachedPayloadAuth":true}
+manifestUrl=file://../download0/dummy_psn.json.aes
+lastRequestPayload={"token":"fake_bypass_token","user_id":"12345"}

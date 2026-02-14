@@ -1,0 +1,2 @@
+Put `fake-signin.bin`, `elfldr.elf` and `payload.bin`(optional) here.
+`payload.bin` is not necessary. It could be GoldHEN or HEN. It would be autoloaded if nothing is found in `/mnt/usb?/payload.bin` or `/data/payload.bin`.

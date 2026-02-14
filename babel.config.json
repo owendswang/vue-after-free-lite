@@ -1,0 +1,20 @@
+{
+  "presets": [
+    [
+      "@babel/preset-env",
+      {
+        "targets": {
+          "safari": "10",
+          "esmodules": false
+        },
+        "useBuiltIns": "usage",
+        "corejs": "3.6.5",
+        "modules": false
+      }
+    ],
+    ["@babel/preset-typescript"]
+  ],
+  "plugins": [
+    ["./module-remover/index.js"]
+  ]
+}

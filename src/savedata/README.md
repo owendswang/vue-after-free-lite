@@ -1,0 +1,1 @@
+Encrypt this with `../tools/encrypt_aes_files.py localstorage`
