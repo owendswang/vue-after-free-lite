@@ -56,8 +56,6 @@ Q: My payload is not recognized what should I do? A: Format your USB drive to mb
 > [!IMPORTANT]
 > DO NOT change your np environment via Debug Settings, it will cause you to be unable to use a backup save file. And makes it incompatible with the current fake sign in payload. 
 
-## Update
-
 ## Requirements
 ### For Vue-After-Free Users
   * FTP client
@@ -106,8 +104,8 @@ A network connection of any kind is required, before trying to run Vue please co
 # Connecting to the internet.
   1. Navigate to Settings > System > Automatic Downloads, and uncheck "Featured Content", "System Software Update Files" and "Application Update Files".
   2. Navigate to Settings > Network > Check Connect to the Internet, then Set Up Internet Connection.
-  3. Connection: [s]Wi-Fi or[/s] LAN cable is recommended.
-     Because Wi-Fi would connect to the Internet after you input the correct password before you setup a manual DNS. You either disconnect the WAN cable from your Wi-Fi device or router.
+  3. Connection: ~~Wi-Fi or~~ LAN cable is recommended.
+     Because Wi-Fi would connect to the Internet after you input the correct password before you setup a manual DNS. Or you could either disconnect the WAN cable from your Wi-Fi device or router.
   4. Set Up: Custom
   5. IP Address: Automatic
   6. DHCP Host Name: Do Not Specify
@@ -130,7 +128,7 @@ The `ftp-server.ts` payload gives you sandbox FTP to quickly swap exploit or cos
 ## ELFLDR (Needs jailbreak)
 `elfldr.elf` is used to load elf and bin payloads post exploit when HEN or GoldHEN have not been loaded.
 
-# NP-Fake-SignIn (Needs jailbreak)
+## NP-Fake-SignIn (Needs jailbreak)
 The np-fake-signin payload gets rid of the first PS Vue pop-up asking you to sign into PSN. It can be launched from the payloads menu.
 > [!IMPORTANT]
 > The np-fake-signin should not be run on a real psn account.
