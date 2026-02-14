@@ -2,6 +2,8 @@ import { libc_addr } from 'download0/userland'
 import { fn, mem, BigInt, utils } from 'download0/types'
 import { sysctlbyname } from 'download0/kernel'
 import { lapse } from 'download0/lapse'
+import { netctrl_exploit } from 'download0/netctrl_c0w_twins'
+import { start_ftp_server } from 'download0/ftp-server'
 import { binloader_init } from 'download0/binloader'
 import { checkJailbroken } from 'download0/check-jailbroken'
 
@@ -66,7 +68,7 @@ const compare_version = (a: string, b: string) => {
   return amaj === bmaj ? amin - bmin : amaj - bmaj
 }
 
-function timeoutExploitAsync (chosenMethod) {
+function timeoutExploitAsync (chosenMethod: string) {
   const max_wait_seconds = chosenMethod === 'lapse' ? 5 : 10
   const timeoutMs = max_wait_seconds * 1000
 
@@ -88,6 +90,19 @@ function start_loader () {
   let lapseAble = false
   let poopsAble = false
   let chosenMethod = ''
+  let autoChooseTimer = NaN
+
+  function chooseMethodWithDelay(methodName: string, timeoutSeconds: number, callback: Function) {
+    log('(Close and re-open Vue to choose again)')
+    log('')
+    log(`=== ${methodName} ===`)
+    log(`Starting in ${timeoutSeconds.toString()} second...`)
+    chosenMethod = methodName
+    jsmaf.setTimeout(function () {
+      callback()
+    }, timeoutSeconds * 1000)
+  }
+
   const is_jailbroken = checkJailbroken()
   if (!is_jailbroken) {
     log('Select jailbreak method:')
@@ -113,10 +128,17 @@ function start_loader () {
   }
   log('')
 
-  jsmaf._onKeyUp = function (keyCode) {
+  jsmaf._onKeyUp = function (keyCode: number) {
+    if (!isNaN(autoChooseTimer)) {
+      jsmaf.clearTimeout(autoChooseTimer)
+      log('Interrupted auto choosing')
+      autoChooseTimer = NaN
+    }
+
     if (chosenMethod.length > 0) {
       return
     }
+
     debug(keyCode.toString())
     // 1 = l3
     // 2 = r3
@@ -144,74 +166,68 @@ function start_loader () {
     // 62 = right stick left
 
     // cross pressed
-    if (keyCode === 14) {
-      if (lapseAble) {
-        log('(Close and re-open Vue to choose again)')
-        log('')
-        log('=== PS4 Lapse Jailbreak ===')
-        log('Starting in 1 second...')
-        chosenMethod = 'lapse'
-        jsmaf.setTimeout(function () {
-          lapse()
-          timeoutExploitAsync('lapse', function (err) {
-            if (err) throw err
-          })
-        }, 1000)
-      }
+    if ((keyCode === 14) && lapseAble) {
+      chooseMethodWithDelay('PS4 Lapse Jailbreak', 1, function() {
+        lapse()
+        timeoutExploitAsync('lapse', function (err) {
+          if (err) throw err
+        })
+      })
     }
 
     // circle pressed
-    if (keyCode === 13) {
-      if (poopsAble) {
-        log('(Close and re-open Vue to choose again)')
-        log('')
-        log('=== PS4 NetCtrl Jailbreak ===')
-        log('Starting in 1 second...')
-        chosenMethod = 'poopsloit'
-        jsmaf.setTimeout(function () {
-          netctrl_exploit()
-        }, 1000)
-      }
+    if ((keyCode === 13) && poopsAble) {
+      chooseMethodWithDelay('PS4 NetCtrl Jailbreak', 1, function() {
+        netctrl_exploit()
+      })
     }
 
     // square pressed
     if (keyCode === 15) {
-      log('(Close and re-open Vue to choose again)')
-      log('')
-      log('=== FTP Server (Userland only) ===')
-      log('Starting in 1 second...')
-      chosenMethod = 'ftpServer'
-      jsmaf.setTimeout(function () {
+      chooseMethodWithDelay('FTP Server (Userland only)', 1, function() {
         start_ftp_server()
-      }, 1000)
+      })
     }
 
     // triangle pressed
-    if (keyCode === 12) {
-      if (is_jailbroken) {
-        log('(Close and re-open Vue to choose again)')
-        log('')
-        log('=== ELF Loader (elfldr.elf) ===')
-        log('Starting in 1 second...')
-        chosenMethod = 'elfldr'
-        jsmaf.setTimeout(function () {
-          binloader_init('elfldr.elf')
-        }, 1000)
-      }
+    if ((keyCode === 12) && is_jailbroken) {
+      chooseMethodWithDelay('ELF Loader (elfldr.elf)', 1, function() {
+        binloader_init('elfldr.elf')
+      })
     }
 
     // r1 pressed
-    if (keyCode === 11) {
-      if (is_jailbroken) {
-        log('(Close and re-open Vue to choose again)')
-        log('')
-        log('=== NP Fake Signin ===')
-        log('Starting in 1 second...')
-        chosenMethod = 'fake-signin'
-        jsmaf.setTimeout(function () {
-          binloader_init('fake-signin.bin')
-        }, 1000)
-      }
+    if ((keyCode === 11) && is_jailbroken) {
+      chooseMethodWithDelay('NP Fake Signin', 1, function() {
+        binloader_init('fake-signin.bin')
+      })
+    }
+  }
+
+  if (!is_jailbroken && chosenMethod.length === 0) {
+    if (lapseAble) {
+      log('Auto choosing "Lapse" in 1 second...')
+      log('(Press any key to interrupt it)')
+      autoChooseTimer = jsmaf.setTimeout(function() {
+        if (chosenMethod.length === 0) {
+          chooseMethodWithDelay('PS4 Lapse Jailbreak', 1, function() {
+            lapse()
+            timeoutExploitAsync('lapse', function (err) {
+              if (err) throw err
+            })
+          })
+        }
+      }, 1000)
+    } else if (poopsAble) {
+      log('Auto choosing "Poopsloit" in 1 second...')
+      log('(Press any key to interrupt it)')
+      autoChooseTimer = jsmaf.setTimeout(function() {
+        if (chosenMethod.length === 0) {
+          chooseMethodWithDelay('PS4 NetCtrl Jailbreak', 1, function() {
+            netctrl_exploit()
+          })
+        }
+      }, 1000)
     }
   }
 }
