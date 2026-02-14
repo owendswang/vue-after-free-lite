@@ -18,6 +18,8 @@ What I did:
   5. Tweaked some scopes of JS functions and variables.
   6. No changes of the exploit processes.
 
+# Screenshots
+<img src="screenshots/1.jpg" width="200"> <img src="screenshots/2.jpg" width="200"> <img src="screenshots/3.jpg" width="200"> <img src="screenshots/4.jpg" width="200">
 
 # Vue After Free Userland
 CVE-2018-4441 was shortly applied but due to instability and bad success rate it was dropped.    
