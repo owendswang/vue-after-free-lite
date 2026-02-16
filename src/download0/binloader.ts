@@ -357,6 +357,17 @@ export function binloader_init (payloadSelect: string | undefined) {
     nanosleep_sys(ts, new BigInt(0, 0))
   }
 
+  function bl_autoclose(delayMs: number) {
+    log('Auto closing - terminating current process')
+
+    bl_sleep_ms(delayMs)
+    const pid = fn.getpid()
+    const pid_num = pid.lo
+    const kr = fn.kill(pid_num, 9)
+    log('kill ret=' + kr.toString())
+    // exit_sys(0)
+  }
+
   // BinLoader object
   const BinLoader: {
     data: BigInt | null,
@@ -471,14 +482,7 @@ export function binloader_init (payloadSelect: string | undefined) {
 
         // Check if autoclose is enabled
         if (!BinLoader.skip_autoclose) {
-          log('Auto closing - terminating current process')
-
-          bl_sleep_ms(500)
-          const pid = fn.getpid()
-          const pid_num = pid.lo
-          const kr = fn.kill(pid_num, 9)
-          log('kill ret=' + kr.toString())
-          // exit_sys(0)
+          bl_autoclose(500)
           return
         }
       } else {
@@ -719,25 +723,37 @@ export function binloader_init (payloadSelect: string | undefined) {
     return bl_network_loader()
   }
 
-  function bl_is_port_listening_localhost (port: number) {
+  function bl_is_port_listening_localhost(port: number) {
+    const SO_SNDTIMEO = 0x1005
+    const SO_RCVTIMEO = 0x1006
+
     const sd = socket(BL_AF_INET, BL_SOCK_STREAM, 0)
     if (bl_is_error(sd)) return false
     const sd_num = (sd instanceof BigInt) ? sd.lo : sd
 
-    const sockaddr = mem.malloc(16)
-    for (let j = 0; j < 16; j++) mem.view(sockaddr).setUint8(j, 0)
-    mem.view(sockaddr).setUint8(1, 2)
-    mem.view(sockaddr).setUint8(2, (port >> 8) & 0xff)
-    mem.view(sockaddr).setUint8(3, port & 0xff)
-    mem.view(sockaddr).setUint8(4, 127)
-    mem.view(sockaddr).setUint8(5, 0)
-    mem.view(sockaddr).setUint8(6, 0)
-    mem.view(sockaddr).setUint8(7, 1)
+    try {
+      const tv = mem.malloc(16)
+      mem.view(tv).setBigInt(0, new BigInt(0, 0), true)
+      mem.view(tv).setBigInt(8, new BigInt(0, 200000), true)
 
-    const ret = connect_sys(new BigInt(0, sd_num), sockaddr, new BigInt(0, 16))
-    close_sys(sd_num)
+      setsockopt(sd_num, BL_SOL_SOCKET, SO_SNDTIMEO, tv, 16)
+      setsockopt(sd_num, BL_SOL_SOCKET, SO_RCVTIMEO, tv, 16)
 
-    return !bl_is_error(ret) && ret.eq(0)
+      const sockaddr = mem.malloc(16)
+      for (let j = 0; j < 16; j++) mem.view(sockaddr).setUint8(j, 0)
+      mem.view(sockaddr).setUint8(1, 2)
+      mem.view(sockaddr).setUint8(2, (port >> 8) & 0xff)
+      mem.view(sockaddr).setUint8(3, port & 0xff)
+      mem.view(sockaddr).setUint8(4, 127)
+      mem.view(sockaddr).setUint8(5, 0)
+      mem.view(sockaddr).setUint8(6, 0)
+      mem.view(sockaddr).setUint8(7, 1)
+
+      const ret = connect_sys(new BigInt(0, sd_num), sockaddr, new BigInt(0, 16))
+      return !bl_is_error(ret) && ret.eq(0)
+    } finally {
+      close_sys(sd_num)
+    }
   }
 
   // End of binloader_init() function
@@ -747,8 +763,8 @@ export function binloader_init (payloadSelect: string | undefined) {
     if (bl_is_port_listening_localhost(9021)) {
       log('9021 already listening, skip /download0/elfldr.elf')
       jsmaf.setTimeout(function() {
-        exit_sys(0)
-      }, 1000)
+        bl_autoclose(500)
+      }, 500)
     } else {
       bl_load_from_file('/download0/elfldr.elf', false)
     }

@@ -944,12 +944,12 @@ export function netctrl_exploit () {
     for (var i = 0; i < 3; i++) {
       if (kread64(master_r_pipe_data.add(0x10)).eq(victim_r_pipe_data)) {
         kws_success = 1
-        break;
+        break
       }
       debug('kwriteslow did not work - Trying again')
       ret_write = kwriteslow(master_r_pipe_data, master_pipe_buf, PIPEBUF_SIZE)
       if (ret_write.eq(BigInt_Error)) {
-        cleanup();
+        cleanup()
         throw new Error('kwriteslow master_r_pipe_data: BigInt_Error')
       }
     }
@@ -1054,7 +1054,7 @@ export function netctrl_exploit () {
     jailbreak_shared(FW_VERSION)
 
     log('Jailbreak Complete - JAILBROKEN')
-    utils.notify('The Vue-after-Free team congratulates you\nNetCtrl Finished OK\nEnjoy freedom')
+    // utils.notify('The Vue-after-Free team congratulates you\nNetCtrl Finished OK\nEnjoy freedom')
 
     cleanup(false) // Close sockets and kill workers on success
     binloader_init()
