@@ -52,7 +52,7 @@ function get_fwversion () {
 const FW_VERSION: string | null = get_fwversion()
 
 if (FW_VERSION === null) {
-  log('ERROR: Failed to determine FW version')
+  error('ERROR: Failed to determine FW version')
   throw new Error('Failed to determine FW version')
 } else {
   log('Firmware Version: ' + FW_VERSION)
@@ -83,7 +83,7 @@ function timeoutExploitAsync (chosenMethod: string) {
 
 function start_loader () {
   log('')
-  if (compare_version(FW_VERSION, '7.00') < 0 && compare_version(FW_VERSION, '13.00') > 0) {
+  if (compare_version(FW_VERSION, '7.00') < 0 || compare_version(FW_VERSION, '13.00') > 0) {
     throw new Error('Unsupported firmware: ' + FW_VERSION)
   }
 

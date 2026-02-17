@@ -225,13 +225,13 @@ try {
             scheduleRefresh()
         }
     }
-    try {
-        yieldUI(function () {
-            include('loader.js');
-        });
-    } catch(e) {
-        error(e.message);
-    }
+    yieldUI(function () {
+        try {
+            include('loader.js')
+        } catch (e) {
+            error(e.message)
+        }
+    })
 } catch(e) {
     alert(`${e.message}\n${e.stack}`);
 }

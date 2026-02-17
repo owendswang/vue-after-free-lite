@@ -39,6 +39,10 @@ const kpatch_shellcode = {
 // These are the offsets where 0x33 is patched to 0x37
 const kpatch_mmap_offsets: Record<string, [number, number]> = {
   // TODO: missing 5.00 to 8.50
+  '5.00': [0x13d510, 0x13d513],   // TODO: verify
+  '5.03': [0x13d620, 0x13d623],   // TODO: verify
+  '5.50': [0x3c25d9, 0x3c25dc],   // TODO: verify
+  '5.53': [0x3c24d9, 0x3c24dc],   // TODO: verify
   '5.55': [0x3c2899, 0x3c289c],   // TODO: verify
   '5.56': [0x24026d, 0x240270],   // TODO: verify
   '6.00': [0x24026d, 0x240270],   // TODO: verify
