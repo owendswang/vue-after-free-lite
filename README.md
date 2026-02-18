@@ -14,6 +14,7 @@ What I did:
   1. Removed UI. And replaced it with only console like screen.
   2. Removed some payloads. Only elfldr, fake-signin, ftp-server left.
   3. Added GoldHEN in `download0.dat` cache.
+  4. Auto start exploit after Vue opened.
   4. Auto close after any payload has been loaded.
   5. Tweaked some scopes of JS functions and variables.
   6. No changes of the exploit processes.
@@ -42,13 +43,33 @@ This table indicates firmware versions for which the _current version_ of this r
 * Userland exploit works 5.05 to 13.02 as is.
 
 # FAQ
-Q: Will this work on 13.02 or above? A: Only the userland, you cannot jailbreak above 13.00 with the files in this repo.    
-Q: I ran Vue and the app crashed? A: If the app crashes the exploit failed reboot the console and try again.    
-Q: I ran Vue and my console shutdown what do I do? A: If a kernel panic occurred you may need to press the power button on your console twice, then retry running the exploit.    
-Q: How can I run a payload? A: Closing and Reopening Vue is required between running js payloads, but .bin or .elf payloads can be run one after the other. Select the payload from the UI in the Payload Menu.    
-Q: Can I run the jailbreak offline? A: No. PS Vue requires any form of network connection, internet is not required as such you can use any network like home WiFi or Hotspot from your mobile phone or a network from a micro controller like ESP32 or an Ethernet network from a reporpused PPPwn device.     
-Q: I am getting "This service requires you to sign in to PlayStation Network" even after replacing the save file how can I fix it? A: Your Vue app most likely updated, this usually happens when not using a DNS or blocking Sony servers in general. You will have to delete and reinstall it.     
-Q: My payload is not recognized what should I do? A: Format your USB drive to mbr partition and exfat format. 
+
+**Q: Will this work on 13.02 or above?**
+Only the userland, you cannot jailbreak above 13.00 with the files in this repo.
+
+**Q: Do I need an internet connection?**
+You need any form of a network connection, not specifically internet. You can use your mobile phone hotspot or anyting else available. Vue will not launch the exploit without a network connection and will display "There was a problem connecting to the internet". Please see [Connection Instructions](#connecting-to-the-internet).
+
+**Q: I am getting "There is a network communication issue" error.**
+This indicates that either Vue has updated or your save file has reset. Use your own profile backup's save, or if using the system backup from this repo, unpack the `encryptedsavebackup.zip` to a USB and import it with the PS4 saved data management.
+
+**Q: I am getting "This service requires you to sign in to PlayStation Network" even after replacing the save file, how can I fix it?**
+Your Vue app most likely updated. This usually happens when not using a DNS or blocking Sony servers. You will have to delete and reinstall it.
+
+**Q: I ran Vue and the app crashed?**
+If the app crashes the exploit failed, shutdown the console and try again.
+
+**Q: I ran Vue and my console shutdown, what do I do?**
+If a kernel panic occurred you may need to press the power button on your console twice, then retry running the exploit.
+
+**Q: How can I run a payload?**
+Closing and reopening Vue is required between running JS payloads, but .bin or .elf payloads can be run one after the other. Select the payload from the UI in the Payload Menu.
+
+**Q: Can I run the jailbreak offline?**
+No. PS Vue requires any form of network connection. Internet is not required, so you can use any network like home WiFi, a hotspot from your mobile phone, a network from a microcontroller like ESP32, or an Ethernet network from a repurposed PPPwn device.
+
+**Q: My payload is not recognized, what should I do?**
+Format your USB drive to MBR partition and exFAT format.
 
 > [!IMPORTANT]
 > The Vue save file may occasionally reset. To avoid issues please copy the encrypted save to a USB, from the PS4 settings menu for the user that is used to run the jailbreak, for easy future recovery.   
@@ -70,8 +91,10 @@ Q: My payload is not recognized what should I do? A: Format your USB drive to mb
   * PlayStation Vue 1.01 base and 1.24 patch.(Referred to as "PS Vue or Vue" later in the guide). [Download](https://www.mediafire.com/file/45owcabezln2ykm/CUSA00960.zip/file)   
 
 ### For Non-Jailbroken PS4
-  I do not provide any system backup file. Because I don't have a PS4 with 7.00 firmware.
-  Go refer to the original repo for the non-jailbroken PS4 setup. Then you can replace it with the files from this repo. [vue-after-free](https://github.com/Vuemony/vue-after-free#for-non-jailbroken-ps4)
+  * USB flash drive.
+  * System backup file.
+> [!WARNING]
+> Restoring the system backup will erase all data on your console, then apply the Vue app and it's exploit data to it.   
 
 # Setup Instructions
 ## For Vue-After-Free Users
@@ -80,41 +103,71 @@ Q: My payload is not recognized what should I do? A: Format your USB drive to mb
   * Replace all the files in `/mnt/sandbox/download/CUSA00960/download0/` via `ftp-server.js` in the Vue app. You don't even need to jailbreak your PS4 with this method. You could find all the dist files in `download0-dist-lite.zip` from [relase page](/release)
 
 ## Jailbroken PS4
-A network connection of any kind is required, before trying to run Vue please connect to a local network even if it does not have internet. [Connection Instructions](https://github.com/Vuemony/vue-after-free?tab=readme-ov-file#connecting-to-the-internet)
+A network connection of any kind is required, before trying to run Vue please connect to a local network even if it does not have internet. [Connection Instructions](#connecting-to-the-internet)
   1. Jailbreak your console.
   2. Enable FTP.
-  3. Install Apollo Save Tool. [Download](https://pkg-zone.com/details/APOL00004)
-  4. Install PS Vue 1.01 pkg and 1.24 patch. [Download](https://www.mediafire.com/file/45owcabezln2ykm/CUSA00960.zip/file)
-  5. Connect to the console with FTP.
-  6. Download the `download0-lite.zip` from releases.
-  7. Go to the following path with FTP `/user/download/CUSA00960` (create path if needed) and place `download0.dat` there.
-  8. On your USB unpack the save.zip ( or FTP to `/data/fakeusb/` ). The files will show up in USB Saves as if it is a real USB. It can be toggled in Apollo Settings>USB Saves Sources to be the only thing displayed even while a real USB is plugged in.
-  9. (Optional) GoldHEN is included in the `download0.dat` which could be auto loaded after jailbreak. Or in the root of your USB, you could place HEN or GoldHEN named as `payload.bin`. Or place it in `/data/`.
+  3. Install Apollo Save Tool. [Download](https://github.com/bucanero/apollo-ps4/releases/latest)
+  4. Download PS Vue 1.01 pkg and 1.24 patch and place them on the USB. [Download](https://www.mediafire.com/file/45owcabezln2ykm/CUSA00960.zip/file)
+  5. Open Apollo Save Tool and fake activate your account by going to `User Tools`>`Activate PS4 Accounts` then press R2 then X and then keep pressing `O` till you are asked if you want to exit to the XMB accept with `X` then restart the console and jailbreak again.
+  6. Connect to the console with FTP.
+  7. Download the `download0-lite.zip` from releases.
+  8. Go to the following path with FTP `/user/download/CUSA00960/` (create path if needed) and place `download0.dat` there.
+  9. On your USB unpack the save.zip ( or FTP to `/data/fakeusb/` ). The files will show up in USB Saves as if it is a real USB. It can be toggled in Apollo Settings>USB Saves Sources to be the only thing displayed even while a real USB is plugged in.
+  10. (Optional) GoldHEN is included in the `download0.dat` which could be auto loaded after jailbreak. Or in the root of your USB, you could place HEN or GoldHEN named as `payload.bin`. Or place it in `/data/`. By the way, this is the method to update or replace `payload.bin`.
      `payload.bin` auto loading priority: USB > /data/ > download0.dat
-  10. Plug the USB into the console.
-  11. In Apollo Save Tool go to USB Saves and select the PS Vue save(CUSA00960) and choose the option "Copy save game to HDD".
-  12. Connect PS4 to the Internet [b]without access to PSN[/b]. Refer to [Connecting to the internet](#connecting-to-the-internet)
-  13. Reboot your console then open PS Vue run the exploit by pressing on the jailbreak button or configure the autoloader.
-  14. Optionally after jailbreaking run the [np-fake-signin](https://github.com/Vuemony/vue-after-free/blob/main/README.md#np-fake-signin) payload to avoid the PSN pop-up.
+  11. Plug the USB into the console.
+  12. In Apollo Save Tool go to USB Saves and select the PS Vue save(CUSA00960) and choose the option "Copy save game to HDD".
+  13. Connect PS4 to the Internet [b]without access to PSN[/b]. Refer to [Connecting to the internet](#connecting-to-the-internet)
+  14. Install PS Vue from your package installer, make sure `Background Installation` is off press on yes when it asks if you want to install it again (only for 1.01) then install the 1.24 patch. 
+  15. Reboot your console then open PS Vue. The exploit process would start automatically.
+  16. (Optional) After jailbreaking run the [np-fake-signin](#np-fake-signin-needs-jailbreak) payload to avoid the PSN pop-up.
 
 ## Non-Jailbroken PS4
-  I do not provide any system backup file. Because I don't have a PS4 with 7.00 firmware.
-  Go refer to the original repo for the non-jailbroken PS4 setup. [vue-after-free](https://github.com/Vuemony/vue-after-free#for-non-jailbroken-ps4)
+A network connection of any kind is required, before trying to run Vue please connect to a local network even if it does not have internet, but if it does make sure you have first read the instructions  >. [Connection Instructions](#connecting-to-the-internet)
+  1. Format your USB Drive to Exfat.
+> [!WARNING]
+> This will wipe your drive of all data. Backup any important data.   
+  2. Download the `VueSystemBackup-lite.zip` from Releases.
+  3. Unpack the contents of the zip onto the USB.
+  4. Plug the USB into your console.
+  5. If you have a real PSN account on the console go to Settings>Application Saved Data Management>Saved Data in System Storage and backup your savedata to the USB. (Sufficient space required.)
+  * If you cannot access the savedata you do not have a Real PSN account or fake activated account, meaning that if you do not jailbreak first you cannot backup your saves.
+  6. Go to Settings>Storage>System Storage>Capture Gallery>All and backup your captures to the USB. (Sufficient space required.)
+  7. Go to Settings>System>Back Up and Restore>Restore PS4 and select the system backup there and restore it.
+  8. When the console reboots you will have a fake activated user account and PS Vue and it's exploit data.
+  9. In the root of your USB place HEN or GoldHEN named as `payload.bin`. It will be loaded from `/data/` in the future so you do not need the USB after the first time.
+  10. Connect PS4 to the Internet [b]without access to PSN[/b]. Refer to [Connecting to the internet](#connecting-to-the-internet)
+  11. Open PS Vue run the exploit by pressing on the jailbreak button or configure the autoloader.
+  12. Optionally after jailbreaking run the [np-fake-signin](#np-fake-signin-needs-jailbreak) payload to avoid the PSN pop-up.
+  * User account ID is "1111111111111111" you cannot change it but you can create another user and fake activate it (instructions below), then while jailbroken follow the instructions above for jailbroken users to set up PS Vue while signed into the newly activated account.
+
+### Creating a separate user
+If you wish to use a new account instead of the default one in the system backup.
+  1. Create a new user.
+  2. Fake activate it with Apollo Save Tool from User Tools>Activate PS4 Accounts. (optionally with the Account ID you want) then Reboot the console.
+  3. On your USB unpack the save.zip from the VueManualSetup.zip in Releases.
+  4. In Apollo Save Tool go to USB Saves and select the PS Vue save(CUSA00960) and choose the option "Copy save game to HDD".
+
+### Updating Vue Exploit
+  The same as [Setup Instructions for Vue-After-Free Users](#for-vue-after-free-users-1)
 
 # Connecting to the internet.
   1. Navigate to Settings > System > Automatic Downloads, and uncheck "Featured Content", "System Software Update Files" and "Application Update Files".
-  2. Navigate to Settings > Network > Check Connect to the Internet, then Set Up Internet Connection.
-  3. Connection: ~~Wi-Fi or~~ LAN cable is recommended.
-     Because Wi-Fi would connect to the Internet after you input the correct password before you setup a manual DNS. Or you could either disconnect the WAN cable from your Wi-Fi device or router.
-  4. Set Up: Custom
-  5. IP Address: Automatic
-  6. DHCP Host Name: Do Not Specify
-  7. DNS Settings: Manual
-  8. Primary DNS: 62.210.38.117 (Leave the secondary blank as it is)
-  9. MTU Settings: Automatic
-  10. Proxy Server: Do Not Use
-  11. Test the internet connection if you get an IP address it's working.
-  * The internet connection failing does not indicate that it actually cannot connect to the internet, it just means the PS4 cannot communicate with Sony servers which is the point of the DNS
+  2. Navigate to **Settings > Network > Set Up Internet Connection**
+  3. Choose your connection type:
+     - **Use a LAN Cable** > **Custom**: Proceed to the next step.
+     - **Use WiFi** > **Custom** Scroll to the bottom and select **Set Up Manually** > **Enter Manually** Enter your network name then set security to "WPA-PSK/WPA2-PSK and put in the password" Proceed to the next step.
+> [!WARNING]
+> If you select any SSID, Wi-Fi would connect to the Internet after you input the correct password before you setup a manual DNS. Or you could either disconnect the WAN cable from your Wi-Fi device or router. So please select **Set Up Manually**.
+  4. **IP Address Settings** Choose `Automatic`.
+  5. **DHCP Host Name** Choose `Do not Specify`.
+  6. **DNS Settings** Choose `Manual`.
+  7. Set **Primary DNS** to `127.0.0.2` or `62.210.38.117` (leave Secondary DNS blank). 127.0.0.2 will limit your to local network connections only, while the 62.210.. DNS is the Nomadic DNS which blocks Sony servers and allow a normal internet connection.
+  8. **MTU Settings** Choose "Automatic", **Proxy Server** Choose "Do Not Use".
+  9. Press **Test Internet Connection** wait for the connection to establish. 
+> [!NOTE]
+> If you get an IP Address but do not get an internet connection then the 62.210... DNS is working. IF you get a successful internet connection it has failed to apply due to limitations in your local network. Please use the 127.0.0.2 DNS.
+* The internet connection failing does not indicate that it actually cannot connect to the internet, it just means the PS4 cannot communicate with Sony servers which is the point of the DNS.
 
 # Payloads
 Vue After Free Lite comes preloaded with some payloads.
