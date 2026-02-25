@@ -3,6 +3,11 @@
 var WS_PORT = 40404;
 
 try {
+    // jsmaf.networkStatus = 'connected';
+    // jsmaf.onNetworkStatusChange = function() {};
+    // jsmaf.location.requiresPsn = false;
+    // jsmaf.location.mOnNetworkStatusChangeFunc = function() {};
+
     //allow remoteplay
     jsmaf.remotePlay = true;
 
@@ -31,11 +36,11 @@ try {
     var ICON_EMPTY = 'file:///../download0/1PixelTransparent.png';
 
     var ICON_MAP = {
-        'X': 'file:///../download0/img/ds4_cross_24.png',
-        'O': 'file:///../download0/img/ds4_circle_24.png',
-        'Square': 'file:///../download0/img/ds4_square_24.png',
-        'Triangle': 'file:///../download0/img/ds4_triangle_24.png',
-        'R1': 'file:///../download0/img/ds4_R1_24.png'
+        X: 'file:///../download0/img/ds4_cross_24.png',
+        O: 'file:///../download0/img/ds4_circle_24.png',
+        Square: 'file:///../download0/img/ds4_square_24.png',
+        Triangle: 'file:///../download0/img/ds4_triangle_24.png',
+        R1: 'file:///../download0/img/ds4_R1_24.png'
     };
 
     var iconLines = [];
@@ -182,9 +187,7 @@ try {
                 jsmaf.eval(e.data[0]);
             } catch(err) {
                 error(err.message);
-                for (var i of err.stack.split('\n')) {
-                    error(i);
-                }
+                debug(err.stack);
             }
         } else {
             error('Failed to receive valid message !!');
@@ -199,7 +202,7 @@ try {
     log(String(jsmaf.remotePlay)); // true
 */
     // Credits
-    log('Vue After Free  v1.4 - Lite');
+    log('Vue After Free  v2.0 - Lite');
     log('Credits:');
     log('ufm42, c0w-ar, earthonion, HelloYunho, Gezine, D-Link Turtle, Dr.Yenyen, Thefl0w, abc, AI-Azif, owendswang');
     // log('ps4-hen - AI-Azif, illusion0001, EchoStretch')

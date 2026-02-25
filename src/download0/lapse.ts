@@ -1,5 +1,5 @@
-import { fn, BigInt, syscalls, gadgets, mem, rop, utils } from 'download0/types'
-import { kernel, apply_kernel_patches, hex, malloc, read16, read32, read64, read8, write16, write32, write64, write8, get_kernel_offset, get_mmap_patch_offsets } from 'download0/kernel'
+import { fn, BigInt, gadgets, mem, rop, utils } from 'download0/types'
+import { kernel, apply_kernel_patches, hex, malloc, read16, read32, read64, read8, write16, write32, write64, write8, get_kernel_offset, get_mmap_patch_offsets, kernel_offset, rtprio_thread_wrapper, cpuset_setaffinity_wrapper, read_wrapper, aio_multi_delete_wrapper, thr_exit_wrapper, write_wrapper, sched_yield_wrapper, thr_suspend_ucontext_wrapper } from 'download0/kernel'
 import { binloader_init } from 'download0/loader'
 
 export function lapse () {

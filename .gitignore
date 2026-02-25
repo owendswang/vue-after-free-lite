@@ -17,3 +17,9 @@ dist
 # payloads
 payloads/*.bin
 payloads/*.elf
+
+venv
+/src/tools/*.aes
+/src/tools/*.js
+/src/tools/localstorage
+remote-install

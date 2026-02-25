@@ -1171,3 +1171,5 @@ const setsockopt_wrapper = syscalls.map.get(0x69)
 const getsockopt_wrapper = syscalls.map.get(0x76)
 
 const BigInt_Error = new BigInt(0xFFFFFFFF, 0xFFFFFFFF)
+
+export { longjmp_addr, setjmp_addr, read_wrapper, write_wrapper, sched_yield_wrapper, thr_suspend_ucontext_wrapper, cpuset_setaffinity_wrapper, rtprio_thread_wrapper, aio_multi_delete_wrapper, thr_exit_wrapper, recvmsg_wrapper, readv_wrapper, writev_wrapper, setsockopt_wrapper, getsockopt_wrapper, BigInt_Error, kernel_offset }

@@ -92,7 +92,7 @@ function start_loader () {
   let chosenMethod = ''
   let autoChooseTimer = NaN
 
-  function chooseMethodWithDelay(methodName: string, timeoutSeconds: number, callback: Function) {
+  function chooseMethodWithDelay(methodName: string, timeoutSeconds: number, callback: () => void) {
     log('(Close and re-open Vue to choose again)')
     log('')
     log(`=== ${methodName} ===`)

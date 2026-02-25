@@ -192,26 +192,26 @@ export function start_ftp_server() {
     return str
   }
 
-  function read_u32(p: any, off: number) {
+  function read_u32(p: BigInt, off: number) {
     return mem.view(p).getUint32(off, true)
   }
 
-  function read_u64_lo(p: any, off: number) {
+  function read_u64_lo(p: BigInt, off: number) {
     const lo = read_u32(p, off)
     const hi = read_u32(p, off + 4)
     if (hi !== 0) return 0
     return lo
   }
 
-  function stat_mode(sb: any) {
+  function stat_mode(sb: BigInt) {
     return mem.view(sb).getUint16(8, true)
   }
 
-  function stat_size(sb: any) {
+  function stat_size(sb: BigInt) {
     return read_u64_lo(sb, 48)
   }
 
-  function stat_mtime_sec(sb: any) {
+  function stat_mtime_sec(sb: BigInt) {
     const sec = read_u64_lo(sb, 88)
     return sec
   }
@@ -1130,7 +1130,7 @@ export function start_ftp_server() {
 
     setTimeout(accept_tick, 0)
   } catch (e) {
-    log('[FTP] Error: ' + ((e as Error).stack || (e as Error).message || e))
+    error('[FTP] Error: ' + (e as Error).message + ((e as Error).stack ? ('\n' + (e as Error).stack) : ''))
   }
 }
 

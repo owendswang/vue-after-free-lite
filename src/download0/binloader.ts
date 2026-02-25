@@ -1,5 +1,4 @@
 import { fn, BigInt, mem, utils } from 'download0/types'
-import { libc_addr } from 'download0/userland'
 
 // bin_loader.js - ELF/binary loader for PS4 after vue-after-free jailbreak
 // Ported from netflix N Hack for ps4
@@ -33,9 +32,9 @@ export function binloader_init (payloadSelect: string | undefined) {
   const connect_sys = fn.connect_sys
   const socket = fn.socket
   const setsockopt = fn.setsockopt
-  const exit_sys = fn.exit_sys
+  // const exit_sys = fn.exit_sys
   const nanosleep_sys = fn.nanosleep_sys
-  const thr_exit_sys = fn.thr_exit_sys
+  // const thr_exit_sys = fn.thr_exit_sys
 
   // Constants
   const BIN_LOADER_PORT = 9020
@@ -482,8 +481,7 @@ export function binloader_init (payloadSelect: string | undefined) {
 
         // Check if autoclose is enabled
         if (!BinLoader.skip_autoclose) {
-          bl_autoclose(500)
-          return
+          bl_autoclose(1000)
         }
       } else {
         error('ERROR: thrd_create failed with return value: ' + ret.toString())
@@ -587,7 +585,7 @@ export function binloader_init (payloadSelect: string | undefined) {
     try {
       BinLoader.init(payload.buf, payload.size)
       if (!skip_autoclose) {
-        log("Running payload in 1 second. Then auto close...")
+        log('Running payload in 1 second. Then auto close...')
         jsmaf.setTimeout(function() {
           BinLoader.run()
           log('Payload loaded successfully')
@@ -598,7 +596,6 @@ export function binloader_init (payloadSelect: string | undefined) {
       }
     } catch (e) {
       error('ERROR loading payload: ' + (e as Error).message)
-      if ((e as Error).stack) log((e as Error).stack ?? '')
       return false
     }
 
@@ -672,7 +669,6 @@ export function binloader_init (payloadSelect: string | undefined) {
       log('Payload loaded successfully')
     } catch (e) {
       error('ERROR loading payload: ' + (e as Error).message)
-      if ((e as Error).stack) log((e as Error).stack ?? '')
       return false
     }
 

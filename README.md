@@ -42,7 +42,7 @@ This table indicates firmware versions for which the _current version_ of this r
 * By default Lapse is used from 7.00 to 12.02, and Poopsploit from 12.50-13.00. Although you can choose to run Poopsploit on as low as 9.00.
 * Userland exploit works 5.05 to 13.02 as is.
 
-# FAQ
+# FAQ & Troubleshooting
 
 **Q: Will this work on 13.02 or above?**
 Only the userland, you cannot jailbreak above 13.00 with the files in this repo.
@@ -84,13 +84,17 @@ Format your USB drive to MBR partition and exFAT format.
   * USB flash drive.
 
 ### For Jailbroken PS4
+  * Any kind of network connection to launch the app.
   * Fake or legit activated PS4 user account.
   * FTP access to the console.
   * USB flash drive.
 
-  * PlayStation Vue 1.01 base and 1.24 patch.(Referred to as "PS Vue or Vue" later in the guide). [Download](https://www.mediafire.com/file/45owcabezln2ykm/CUSA00960.zip/file)   
+  * PlayStation Vue 1.01 base and 1.24 patch.(Referred to as "PS Vue or Vue" later in the guide). [Download](https://www.mediafire.com/file/45owcabezln2ykm/CUSA00960.zip/file)
 
-### For Non-Jailbroken PS4
+### For Non-Jailbroken PS4 Extended Storage and Save Resign
+  I can't provide the backend to support this method. Go check the [official](https://github.com/Vuemony/vue-after-free#for-non-jailbroken-ps4-extended-storage-and-save-resign) instruction.
+
+### For Non-Jailbroken PS4 System Backup
   * USB flash drive.
   * System backup file.
 > [!WARNING]
@@ -122,8 +126,11 @@ A network connection of any kind is required, before trying to run Vue please co
   15. Reboot your console then open PS Vue. The exploit process would start automatically.
   16. (Optional) After jailbreaking run the [np-fake-signin](#np-fake-signin-needs-jailbreak) payload to avoid the PSN pop-up.
 
-## Non-Jailbroken PS4
-A network connection of any kind is required, before trying to run Vue please connect to a local network even if it does not have internet, but if it does make sure you have first read the instructions  >. [Connection Instructions](#connecting-to-the-internet)
+## For Non-Jailbroken PS4 Extended Storage and Save Resign
+  I can't provide the backend to support this method. Go check the [official](https://github.com/Vuemony/vue-after-free#for-non-jailbroken-ps4-extended-storage-and-save-resign) instruction.
+
+## Non-Jailbroken PS4 System Backup
+A network connection of any kind is required, before trying to run Vue please connect to a local network even if it does not have internet, directly after restoring the system backup. But if it does, make sure you have read the instructions first  >. [Connection Instructions](#connecting-to-the-internet)
   1. Format your USB Drive to Exfat.
 > [!WARNING]
 > This will wipe your drive of all data. Backup any important data.   
@@ -136,8 +143,9 @@ A network connection of any kind is required, before trying to run Vue please co
   7. Go to Settings>System>Back Up and Restore>Restore PS4 and select the system backup there and restore it.
   8. When the console reboots you will have a fake activated user account and PS Vue and it's exploit data.
   9. In the root of your USB place HEN or GoldHEN named as `payload.bin`. It will be loaded from `/data/` in the future so you do not need the USB after the first time.
-  10. Connect PS4 to the Internet [b]without access to PSN[/b]. Refer to [Connecting to the internet](#connecting-to-the-internet)
-  11. Open PS Vue run the exploit by pressing on the jailbreak button or configure the autoloader.
+  10. Safely connect PS4 to the Internet [b]without access to PSN[/b]. Refer to [Connecting to the internet](#connecting-to-the-internet)
+  11. Open PS Vue you will be told "This service requires you to sign in to PlayStation Network" press OK to continue. It would start exploit automatically and close automatically if it succeeded. GoldHEN would be loaded automatically. 
+      Optionally you could place new GoldHEN renamed to 'payload.bin' in an USB drive in FAT32/EXFAT format and start the exploit with it plugged in PS4. This is the way to overwrite the built-in 'payload.bin'.
   12. Optionally after jailbreaking run the [np-fake-signin](#np-fake-signin-needs-jailbreak) payload to avoid the PSN pop-up.
   * User account ID is "1111111111111111" you cannot change it but you can create another user and fake activate it (instructions below), then while jailbroken follow the instructions above for jailbroken users to set up PS Vue while signed into the newly activated account.
 
@@ -196,13 +204,13 @@ If you wish to use a new account instead of the default one in the system backup
 # Credits
 
 - [c0w-ar](https://github.com/c0w-ar/) — Lapse and NetCtrl porting  , Reverse Engineering
-- [earthonion](https://github.com/earthonion) — UI, initial JS injection, Payload host, Netctrl porting, binloader, Reverse engineering
+- [earthonion](https://github.com/earthonion) — UI, initial JS injection, Payload host, Netctrl porting, binloader, Reverse engineering and remote installer
 - [ufm42](https://github.com/ufm42) — Userland Exploit and reverse engineering
 - [D-Link Turtle](https://github.com/iMrDJAi) — General support for userland exploition
 - [Gezine](https://github.com/gezine) — Local JS method and PSN bypass research
 - [Helloyunho](https://github.com/Helloyunho) — TypeScript port  , Reverse Engineering
-- [Dr.Yenyen](https://github.com/DrYenyen) — Extensive testing, quality control, and end‑user support/ideas
-- [AlAzif](https://github.com/Al-Azif) — Reference for exploit table, retail application advice, Lapse AIO Fix kpatches and 12.50-13.00 kpatches.
+- [Dr.Yenyen](https://github.com/DrYenyen) — Extensive testing, quality control, end‑user support/ideas, system backup and extended storage method
+- [AlAzif](https://github.com/Al-Azif) — Reference for exploit table, retail application advice, Lapse AIO Fix kpatches and 12.50-13.00 kpatches
 - abc — Lapse
 - [TheFlow](https://github.com/TheOfficialFloW) — NetCtrl
 - [Lua Loader project](https://github.com/shahrilnet/remote_lua_loader) — Remote Lua loader foundation
