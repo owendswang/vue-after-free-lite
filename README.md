@@ -104,7 +104,7 @@ Format your USB drive to MBR partition and exFAT format.
 ## For Vue-After-Free Users
   * Replace `/user/download/CUSA00960/download0.dat` via FTP after PS4 jailbroken. You could find the `download0.dat` file in `download0-lite.zip` from [relase page](/release)
   or
-  * Replace all the files in `/mnt/sandbox/download/CUSA00960/download0/` via `ftp-server.js` in the Vue app. You don't even need to jailbreak your PS4 with this method. You could find all the dist files in `download0-dist-lite.zip` from [relase page](/release)
+  * Replace all the files in `download0` via `ftp-server.js` in the Vue app. You don't even need to jailbreak your PS4 with this method. You could find all the dist files in `download0-dist-lite.zip` from [relase page](/release)
 
 ## Jailbroken PS4
 A network connection of any kind is required, before trying to run Vue please connect to a local network even if it does not have internet. [Connection Instructions](#connecting-to-the-internet)
