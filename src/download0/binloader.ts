@@ -602,6 +602,91 @@ export function binloader_init (payloadSelect: string | undefined) {
     return true
   }
 
+  // send payload to elfldr
+  function bl_send_to_elfldr(path: string, port: number, autoclose: boolean = true) {
+    log('Sending payload "' + path + '" to elfldr on port ' + port)
+
+    // Step 1: Read the payload from the specified file
+    const payload = bl_read_file(path)
+    if (payload === null) {
+      error('Failed to read payload file')
+      return false
+    }
+
+    log('Read ' + payload.size + ' bytes of payload')
+
+    if (payload.size < 64) {
+      error('ERROR: Payload too small')
+      return false
+    }
+
+    // Step 2: Create a socket for communication
+    const sd = socket(BL_AF_INET, BL_SOCK_STREAM, 0)
+    const sd_num = (sd instanceof BigInt) ? sd.lo : sd
+
+    if (bl_is_error(sd)) {
+      error('ERROR: socket() failed')
+      return false
+    }
+
+    // Step 3: Build sockaddr_in structure to specify the target host and port
+    const sockaddr = mem.malloc(16)
+    for (let j = 0; j < 16; j++) {
+      mem.view(sockaddr).setUint8(j, 0)
+    }
+    mem.view(sockaddr).setUint8(1, 2)  // AF_INET
+    mem.view(sockaddr).setUint8(2, (port >> 8) & 0xff)  // port high byte
+    mem.view(sockaddr).setUint8(3, port & 0xff)         // port low byte
+    mem.view(sockaddr).setUint32(4, 0, true)  // INADDR_ANY
+
+    // Step 4: Connect to the elfldr on the target IP (localhost)
+    const ret = connect_sys(new BigInt(0, sd_num), sockaddr, new BigInt(0, 16))
+    if (bl_is_error(ret)) {
+      error('ERROR: connect() failed')
+      close_sys(sd_num)
+      return false
+    }
+
+    log('Connected to elfldr')
+
+    // Step 5: Send the payload to the elfldr via the socket
+    let total_sent = 0
+    while (total_sent < payload.size) {
+      const remaining = payload.size - total_sent
+      const chunk_size = remaining < READ_CHUNK ? remaining : READ_CHUNK
+
+      const bytes_sent = write_sys(
+        new BigInt(0, sd_num),
+        payload.buf.add(new BigInt(0, total_sent)),
+        new BigInt(0, chunk_size)
+      )
+
+      if (bl_is_error(bytes_sent)) {
+        error('ERROR: write() failed')
+        close_sys(sd_num)
+        return false
+      }
+
+      total_sent += bytes_sent.lo
+
+      // Progress update every 128KB
+      if (total_sent % (128 * 1024) === 0) {
+        log('Sent ' + (total_sent / 1024) + ' KB...')
+      }
+    }
+
+    log('Payload sent successfully, closing socket')
+
+    // Step 6: Close the socket connection after sending the payload
+    close_sys(sd_num)
+    log('Connection closed')
+
+    if (autoclose) {
+      bl_autoclose(1000)
+    }
+    return true
+  }
+
   // Network binloader (fallback)
   function bl_network_loader () {
     log('Starting network payload server...')
@@ -771,7 +856,19 @@ export function binloader_init (payloadSelect: string | undefined) {
   } else if (payloadSelect === 'elfldr.elf') {
     bl_init_elfldr()
   } else {
-    bl_load_from_file('/download0/' + payloadSelect, false)
+    if (bl_is_port_listening_localhost(9021)) {
+      bl_send_to_elfldr('/download0/' + payloadSelect, 9021)
+    } else if (bl_is_port_listening_localhost(9090)) {
+      bl_send_to_elfldr('/download0/' + payloadSelect, 9090)
+    } else {
+      const ret = bl_load_from_file('/download0/elfldr.elf', true)
+      if (ret) {
+        log('Sending "' + payloadSelect + '" in 1 second')
+        jsmaf.setTimeout(function() {
+          bl_send_to_elfldr('/download0/' + payloadSelect, 9021)
+        }, 1000)
+      }
+    }
   }
 
   return {

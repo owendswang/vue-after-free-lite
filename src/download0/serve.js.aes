@@ -40,7 +40,8 @@ try {
         O: 'file:///../download0/img/ds4_circle_24.png',
         Square: 'file:///../download0/img/ds4_square_24.png',
         Triangle: 'file:///../download0/img/ds4_triangle_24.png',
-        R1: 'file:///../download0/img/ds4_R1_24.png'
+        R1: 'file:///../download0/img/ds4_R1_24.png',
+        L1: 'file:///../download0/img/ds4_L1_24.png'
     };
 
     var iconLines = [];

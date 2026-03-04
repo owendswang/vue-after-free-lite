@@ -124,7 +124,10 @@ function start_loader () {
   log('[Square] = FTP Server (Userland only)')
   if (is_jailbroken) {
     log('[Triangle] = ELF Loader (elfldr.elf)')
-    log('[R1] = NP Fake Signin (fake-signin.bin)')
+    log('[R1] = NP Fake Signin (np-fake-signin.elf)')
+    if (compare_version(FW_VERSION, '13.00') === 0) {
+      log('[L1] = Enable BD-J (Copy 00000.jar to ext/lib)')
+    }
   }
   log('')
 
@@ -149,12 +152,12 @@ function start_loader () {
     // 7 = left
     // 8 + 53= l2
     // 9 + 54= r2
+    // 10 = l1
+    // 11 = r1
     // 12 = triangle
     // 13 = circle
     // 14 = cross
     // 15 = square
-    // 11 = r1
-    // 10 = r2
     // 16 = touchpad click
     // 55 = left stick up
     // 56 = left stick right
@@ -198,8 +201,15 @@ function start_loader () {
 
     // r1 pressed
     if ((keyCode === 11) && is_jailbroken) {
-      chooseMethodWithDelay('NP Fake Signin', 1, function() {
-        binloader_init('fake-signin.bin')
+      chooseMethodWithDelay('NP Fake Signin (np-fake-signin.elf)', 1, function() {
+        binloader_init('np-fake-signin.elf')
+      })
+    }
+
+    // l1 pressed
+    if ((keyCode === 10) && is_jailbroken && (compare_version(FW_VERSION, '13.00') === 0)) {
+      chooseMethodWithDelay('Enable BD-J (Copy 00000.jar to ext/lib)', 1, function() {
+        binloader_init('copy-bdj-jar.elf')
       })
     }
   }

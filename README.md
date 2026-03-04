@@ -194,6 +194,10 @@ The np-fake-signin payload gets rid of the first PS Vue pop-up asking you to sig
 > [!IMPORTANT]
 > The np-fake-signin should not be run on a real psn account.
 
+## Enable BD-J (FW 13.00 Only) (Needs jailbreak)
+`copy-bdj-jar.elf` would copy `00000.jar` to `/system_ex/app/NPXS20113/bdjstack/lib/ext/00000.jar` to enable BD-J method for FW 13.00. 
+Then you could burn a BD disc with the image `henloader-1300-only.iso` as a backup and offline method.
+
 # Creating a separate user
 If you wish to use a new account instead of the default one in the system backup.
 1. Create a new user.
