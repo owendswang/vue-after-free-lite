@@ -226,3 +226,4 @@ If you wish to use a new account instead of the default one in the system backup
 - [AIOfix_network.elf](https://github.com/Gezine/BD-JB-1250/blob/main/payloads/lapse/src/org/bdj/external/aiofix_network.c) by Gezine
 - [np-fake-signin](https://github.com/earthonion/np-fake-signin) by earthonion
 - [GoldHEN](https://ko-fi.com/sistro) by SISTro
+- [HenLoader_LP](https://github.com/GoldHEN/henloader_lp) by Gezine, 15432
