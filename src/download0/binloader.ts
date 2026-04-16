@@ -88,8 +88,11 @@ export function binloader_init (payloadSelect: string | undefined) {
   const ELF_HEADER = {
     E_ENTRY: 0x18,
     E_PHOFF: 0x20,
+    E_SHOFF: 0x28,
     E_PHENTSIZE: 0x36,
     E_PHNUM: 0x38,
+    E_SHENTSIZE: 0x3A,
+    E_SHNUM: 0x3C,
   }
 
   // Program header structure offsets
@@ -102,7 +105,24 @@ export function binloader_init (payloadSelect: string | undefined) {
     P_MEMSZ: 0x28,
   }
 
+  // Section header structure offsets
+  const SECTION_HEADER = {
+    SH_TYPE: 0x04,
+    SH_OFFSET: 0x18,
+    SH_SIZE: 0x20,
+    SH_ENTSIZE: 0x38,
+  }
+
+  // Relocation entry structure offsets
+  const RELA_ENTRY = {
+    R_OFFSET: 0x00,
+    R_INFO: 0x08,
+    R_ADDEND: 0x10,
+  }
+
   const PT_LOAD = 1
+  const SHT_RELA = 4
+  const R_X86_64_RELATIVE = 8
 
   // Helper: Round up to page boundary
   function bl_round_up (x: number, base: number) {
@@ -291,8 +311,11 @@ export function binloader_init (payloadSelect: string | undefined) {
       magic: mem.view(buf_addr).getUint32(0, true),
       e_entry: mem.view(buf_addr).getBigInt(ELF_HEADER.E_ENTRY, true),
       e_phoff: mem.view(buf_addr).getBigInt(ELF_HEADER.E_PHOFF, true),
+      e_shoff: mem.view(buf_addr).getBigInt(ELF_HEADER.E_SHOFF, true),
       e_phentsize: mem.view(buf_addr).getUint16(ELF_HEADER.E_PHENTSIZE, true),
       e_phnum: mem.view(buf_addr).getUint16(ELF_HEADER.E_PHNUM, true),
+      e_shentsize: mem.view(buf_addr).getUint16(ELF_HEADER.E_SHENTSIZE, true),
+      e_shnum: mem.view(buf_addr).getUint16(ELF_HEADER.E_SHNUM, true),
     }
   }
 
@@ -306,6 +329,28 @@ export function binloader_init (payloadSelect: string | undefined) {
       p_vaddr: mem.view(base).getBigInt(PROGRAM_HEADER.P_VADDR, true),
       p_filesz: mem.view(base).getBigInt(PROGRAM_HEADER.P_FILESZ, true),
       p_memsz: mem.view(base).getBigInt(PROGRAM_HEADER.P_MEMSZ, true),
+    }
+  }
+
+  // Read section header from buffer
+  function bl_read_section_header (buf_addr: BigInt, offset: number) {
+    const base = buf_addr.add(new BigInt(0, offset))
+    const view = mem.view(base)
+    return {
+      sh_type: view.getUint32(SECTION_HEADER.SH_TYPE, true),
+      sh_offset: view.getBigInt(SECTION_HEADER.SH_OFFSET, true),
+      sh_size: view.getBigInt(SECTION_HEADER.SH_SIZE, true),
+      sh_entsize: view.getBigInt(SECTION_HEADER.SH_ENTSIZE, true),
+    }
+  }
+
+  // Read relocation entry from buffer
+  function bl_read_relocation_entry (buf_addr: BigInt, offset: number) {
+    const base = buf_addr.add(new BigInt(0, offset))
+    return {
+      r_offset: mem.view(base).getBigInt(RELA_ENTRY.R_OFFSET, true),
+      r_info: mem.view(base).getBigInt(RELA_ENTRY.R_INFO, true),
+      r_addend: mem.view(base).getBigInt(RELA_ENTRY.R_ADDEND, true),
     }
   }
 
@@ -340,6 +385,25 @@ export function binloader_init (payloadSelect: string | undefined) {
           for (let j = filesz; j < memsz; j++) {
             mem.view(seg_addr).setUint8(j, 0)
           }
+        }
+      }
+    }
+
+    // Apply relocations
+    for (let i = 0; i < elf.e_shnum; i++) {
+      const shdr_offset = (elf.e_shoff.lo + (elf.e_shoff.hi * 0x100000000)) + i * elf.e_shentsize
+      const shdr = bl_read_section_header(buf_addr, shdr_offset)
+      if (shdr.sh_type !== SHT_RELA) {
+        continue
+      }
+
+      for (let off = 0; off < shdr.sh_size.lo + shdr.sh_size.hi * 0x100000000; off += shdr.sh_entsize) {
+        const rela_offset = off + shdr.sh_offset.lo + shdr.sh_offset.hi * 0x100000000
+        const rela = bl_read_relocation_entry(buf_addr, rela_offset)
+        if (rela.r_info.lo === R_X86_64_RELATIVE) {
+          const loc = base_addr.add(rela.r_offset)
+          const val = base_addr.add(rela.r_addend)
+          mem.view(loc).setBigInt(0, val, true)
         }
       }
     }
@@ -481,7 +545,7 @@ export function binloader_init (payloadSelect: string | undefined) {
 
         // Check if autoclose is enabled
         if (!BinLoader.skip_autoclose) {
-          bl_autoclose(1000)
+          bl_autoclose(3000)
         }
       } else {
         error('ERROR: thrd_create failed with return value: ' + ret.toString())

